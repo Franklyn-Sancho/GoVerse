@@ -3,13 +3,12 @@ package main
 import (
 	"GoVersi/internal/config"
 	"GoVersi/internal/handlers"
-	"GoVersi/internal/middleware"
 	"GoVersi/internal/models"
 	"GoVersi/internal/repository"
-	routers "GoVersi/internal/routes"
+	"GoVersi/internal/routes"
 	services "GoVersi/internal/service"
+
 	"log"
-	"os"
 
 	"github.com/gin-gonic/gin"
 	"github.com/joho/godotenv"
@@ -29,11 +28,11 @@ func main() {
 	// Inicializar os repositórios
 	postRepository := repository.NewPostRepository(db)
 
-	// Inicializar o serviço de postagens com o repositório
-	postService := services.NewPostService(postRepository)
-
-	// Inicializar o serviço de Token Blacklist
 	tokenBlacklistService := services.NewTokenBlacklistService(db)
+
+	friendshipRepository := repository.NewFriendshipRepository(db)
+	postService := services.NewPostService(postRepository)
+	friendhipService := services.NewFriendshipService(friendshipRepository)
 
 	// Configurar os handlers com os serviços
 	handlers.SetUserService(userService)
@@ -43,8 +42,11 @@ func main() {
 	// Criar uma instância do PostHandler
 	postHandler := handlers.NewPostHandler(postService)
 
+	// Inicializar o FriendshipHandler
+	friendshipHandler := handlers.NewFriendshipHandler(friendhipService)
+
 	// Inicializar o router
-	r := setupRouter(postHandler) // Passa o postHandler
+	r := routes.SetupRouter(postHandler, friendshipHandler)
 
 	// Iniciar o servidor
 	startServer(r)
@@ -79,33 +81,12 @@ func connectDatabase() *gorm.DB {
 		log.Fatalf("Failed to migrate database: %v", err)
 	}
 
+	err = db.AutoMigrate(&models.Friendship{})
+	if err != nil {
+		log.Fatalf("Failed to migrate database: %v", err)
+	}
+
 	return db
-}
-
-// SetupRoutes agora também recebe um PostHandler
-func SetupRoutes(router *gin.Engine, postHandler *handlers.PostHandler) {
-	// Defina a chave secreta do JWT
-	secretKey := os.Getenv("JWT_SECRET_KEY")
-	log.Printf("SetupRoutes Secret Key: %s", secretKey)
-
-	// Rotas públicas (não requerem autenticação)
-	router.POST("/login", handlers.Login)
-	router.POST("/register", handlers.RegisterUser)
-
-	// Rotas protegidas (requerem autenticação)
-	auth := router.Group("/")
-	auth.Use(middleware.AuthMiddleware(secretKey))
-
-	// Configuração das rotas de usuários e postagens
-	routers.SetupUserRoutes(auth)
-	routers.SetupPostRoutes(auth, postHandler) // Aqui passamos o postHandler
-}
-
-// setupRouter configura e retorna o router com as rotas definidas
-func setupRouter(postHandler *handlers.PostHandler) *gin.Engine {
-	r := gin.Default()
-	SetupRoutes(r, postHandler) // Passa o postHandler para SetupRoutes
-	return r
 }
 
 // startServer inicia o servidor na porta especificada

@@ -2,6 +2,7 @@ package config
 
 import (
 	"log"
+	"os"
 
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
@@ -9,7 +10,7 @@ import (
 
 // ConnectDB configura e retorna uma conexão ao banco de dados
 func ConnectDB() (*gorm.DB, error) {
-	dsn := "host=localhost user=postgres password=123456789 dbname=goversidb port=5432 sslmode=disable"
+	dsn := os.Getenv("DATABASE_URL")
 	db, err := gorm.Open(postgres.Open(dsn), &gorm.Config{})
 	if err != nil {
 		log.Printf("Error connecting to database: %v", err)

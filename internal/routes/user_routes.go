@@ -1,4 +1,4 @@
-package routers
+package routes
 
 import (
 	"GoVersi/internal/handlers"
