@@ -3,6 +3,8 @@ package services
 import (
 	"GoVersi/internal/models"
 	"GoVersi/internal/repository"
+
+	"github.com/google/uuid"
 )
 
 type PostService struct {
@@ -18,7 +20,7 @@ func (s *PostService) CreatePost(post *models.Post) error {
 	return s.repo.Create(post)
 }
 
-func (s *PostService) GetPostByID(id int) (*models.Post, error) {
+func (s *PostService) GetPostByID(id uuid.UUID) (*models.Post, error) {
 	return s.repo.FindByID(id)
 }
 
@@ -26,6 +28,6 @@ func (s *PostService) UpdatePost(post *models.Post) error {
 	return s.repo.Update(post)
 }
 
-func (s *PostService) DeletePost(id int) error {
+func (s *PostService) DeletePost(id uuid.UUID) error {
 	return s.repo.Delete(id)
 }

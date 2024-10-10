@@ -2,7 +2,7 @@ package handlers
 
 import (
 	"net/http"
-	"strconv"
+	"time"
 
 	"GoVersi/internal/models"
 	services "GoVersi/internal/service"
@@ -62,12 +62,14 @@ func (h *PostHandler) CreatePost(c *gin.Context) {
 }
 
 func (h *PostHandler) GetPostById(c *gin.Context) {
-	postID, err := strconv.Atoi(c.Param("id"))
+	// Converte o ID da URL para UUID
+	postID, err := uuid.Parse(c.Param("id"))
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid post ID"})
 		return
 	}
 
+	// Chama o serviço com o UUID
 	post, err := h.postService.GetPostByID(postID)
 	if err != nil {
 		c.JSON(http.StatusNotFound, gin.H{"error": "Post not found"})
@@ -88,30 +90,43 @@ func (h *PostHandler) UpdatePost(c *gin.Context) {
 		return
 	}
 
-	var post models.Post
-	if err := c.ShouldBindJSON(&post); err != nil {
+	// Busca o post existente no banco de dados
+	existingPost, err := h.postService.GetPostByID(postID)
+	if err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "Post not found"})
+		return
+	}
+
+	var updatedPostData models.Post
+	if err := c.ShouldBindJSON(&updatedPostData); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 
-	// Define o ID do post que será atualizado
-	post.ID = postID
+	// Atualiza apenas os campos que foram modificados
+	existingPost.Title = updatedPostData.Title
+	existingPost.Content = updatedPostData.Content
+	existingPost.Topic = updatedPostData.Topic
+	existingPost.UpdatedAt = time.Now() // Atualiza o campo UpdatedAt com a hora atual
 
-	if err := h.postService.UpdatePost(&post); err != nil {
+	// Chama o serviço para salvar o post atualizado
+	if err := h.postService.UpdatePost(existingPost); err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to update post"})
 		return
 	}
 
-	c.JSON(http.StatusOK, post)
+	c.JSON(http.StatusOK, existingPost)
 }
 
 func (h *PostHandler) DeletePost(c *gin.Context) {
-	postID, err := strconv.Atoi(c.Param("id"))
+	// Converte o ID da URL para UUID
+	postID, err := uuid.Parse(c.Param("id"))
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid post ID"})
 		return
 	}
 
+	// Chama o serviço para deletar o post usando UUID
 	if err := h.postService.DeletePost(postID); err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to delete post"})
 		return
