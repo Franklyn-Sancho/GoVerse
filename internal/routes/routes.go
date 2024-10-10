@@ -1,39 +1,21 @@
-package routes
+package routers
 
-import (
-	"GoVersi/internal/handlers"
-	"GoVersi/internal/middleware"
-	"log"
-	"os"
-
-	"github.com/gin-gonic/gin"
-)
+/* var userRouter routers.SetupUserRoutes();
 
 func SetupRoutes(router *gin.Engine) {
-	// Defina a chave secreta como uma variável
+	// Defina a chave secreta do JWT
 	secretKey := os.Getenv("JWT_SECRET_KEY")
-	log.Printf("SetupRoutes Secret Key: %s", secretKey) // Adicione este log
+	log.Printf("SetupRoutes Secret Key: %s", secretKey)
 
 	// Rotas públicas (não requerem autenticação)
 	router.POST("/login", handlers.Login)
-	router.POST("/users", handlers.RegisterUser)
+	router.POST("/register", handlers.RegisterUser)
 
 	// Rotas protegidas (requerem autenticação)
-	auth := router.Group("/users")
+	auth := router.Group("/")
 	auth.Use(middleware.AuthMiddleware(secretKey))
-	{
-		// Rotas de usuários
-		auth.GET("/:id", handlers.GetUserById)
-		auth.GET("/username/:username", handlers.GetUserByUsername)
-		auth.GET("/email/:email", handlers.GetUserByEmail)
-		auth.DELETE("/:id", handlers.DeleteUser)
 
-		// Novas funcionalidades relacionadas ao usuário
-		auth.PATCH("/:id/suspend", handlers.SuspendUser)                       // Suspender usuário
-		auth.POST("/:id/request-deletion", handlers.RequestAccountDeletion)    // Solicitar exclusão da conta
-		auth.DELETE("/:id/permanently-delete", handlers.PermanentlyDeleteUser) // Excluir permanentemente
-
-		// Logout
-		auth.POST("/logout", handlers.Logout)
-	}
-}
+	// Configuração das rotas de usuários e postagens
+	routers.SetupUserRoutes(auth)
+	routers.SetupPostRoutes(auth)
+} */
