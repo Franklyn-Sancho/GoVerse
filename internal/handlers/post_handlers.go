@@ -2,7 +2,6 @@ package handlers
 
 import (
 	"net/http"
-	"time"
 
 	"GoVersi/internal/models"
 	services "GoVersi/internal/service"
@@ -35,7 +34,7 @@ func (h *PostHandler) CreatePost(c *gin.Context) {
 		return
 	}
 
-	// Converter o userID para UUID
+	// Converte o userID para UUID
 	authorID, err := uuid.Parse(userID.(string))
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid user ID"})
@@ -48,31 +47,25 @@ func (h *PostHandler) CreatePost(c *gin.Context) {
 		return
 	}
 
-	// Define o AuthorID como o user_id do usuário autenticado
-	post.AuthorID = authorID // Certifique-se de que o `AuthorID` seja do tipo correto
-
 	// Chama o serviço para criar o post
-	if err := h.postService.CreatePost(&post); err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create post"})
+	if err := h.postService.CreatePost(&post, authorID); err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
 
-	// Responde com o post criado
 	c.JSON(http.StatusCreated, post)
 }
 
 func (h *PostHandler) GetPostById(c *gin.Context) {
-	// Converte o ID da URL para UUID
 	postID, err := uuid.Parse(c.Param("id"))
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid post ID"})
 		return
 	}
 
-	// Chama o serviço com o UUID
 	post, err := h.postService.GetPostByID(postID)
 	if err != nil {
-		c.JSON(http.StatusNotFound, gin.H{"error": "Post not found"})
+		c.JSON(http.StatusNotFound, gin.H{"error": err.Error()})
 		return
 	}
 
@@ -80,20 +73,9 @@ func (h *PostHandler) GetPostById(c *gin.Context) {
 }
 
 func (h *PostHandler) UpdatePost(c *gin.Context) {
-	// Pega o ID do post do parâmetro da rota
-	postIDStr := c.Param("id")
-
-	// Converte o ID do post de string para uuid.UUID
-	postID, err := uuid.Parse(postIDStr)
+	postID, err := uuid.Parse(c.Param("id"))
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid post ID"})
-		return
-	}
-
-	// Busca o post existente no banco de dados
-	existingPost, err := h.postService.GetPostByID(postID)
-	if err != nil {
-		c.JSON(http.StatusNotFound, gin.H{"error": "Post not found"})
 		return
 	}
 
@@ -103,30 +85,23 @@ func (h *PostHandler) UpdatePost(c *gin.Context) {
 		return
 	}
 
-	// Atualiza apenas os campos que foram modificados
-	existingPost.Title = updatedPostData.Title
-	existingPost.Content = updatedPostData.Content
-	existingPost.Topic = updatedPostData.Topic
-	existingPost.UpdatedAt = time.Now() // Atualiza o campo UpdatedAt com a hora atual
-
-	// Chama o serviço para salvar o post atualizado
-	if err := h.postService.UpdatePost(existingPost); err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to update post"})
+	// Chama o serviço para atualizar o post
+	updatedPost, err := h.postService.UpdatePost(postID, &updatedPostData)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
 
-	c.JSON(http.StatusOK, existingPost)
+	c.JSON(http.StatusOK, updatedPost)
 }
 
 func (h *PostHandler) DeletePost(c *gin.Context) {
-	// Converte o ID da URL para UUID
 	postID, err := uuid.Parse(c.Param("id"))
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid post ID"})
 		return
 	}
 
-	// Chama o serviço para deletar o post usando UUID
 	if err := h.postService.DeletePost(postID); err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to delete post"})
 		return
