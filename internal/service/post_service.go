@@ -17,13 +17,15 @@ func NewPostService(repo *repository.PostRepository) *PostService {
 	return &PostService{repo: repo}
 }
 
-func (s *PostService) CreatePost(title, content, topic, imageURL string, authorID uuid.UUID) (*models.Post, error) {
+// PostService
+func (s *PostService) CreatePost(title, content, topic, imageURL, videoURL string, authorID uuid.UUID) (*models.Post, error) {
 	post := &models.Post{
 		Title:    title,
 		Content:  content,
 		Topic:    topic,
 		ImageURL: imageURL,
-		AuthorID: authorID, // Associando o autor
+		VideoURL: videoURL, // Associando o vídeo
+		AuthorID: authorID,
 	}
 
 	if err := s.repo.Create(post); err != nil {

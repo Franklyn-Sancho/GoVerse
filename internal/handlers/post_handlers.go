@@ -47,14 +47,21 @@ func (h *PostHandler) CreatePost(c *gin.Context) {
 	}
 
 	// Chama a função de upload de imagem
-	imageURL, err := utils.HandleImageUpload(c, "uploads")
+	imageURL, err := utils.HandleImageUpload(c, "uploads/images")
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	// Chama a função de upload de vídeo
+	videoURL, err := utils.HandleVideoUpload(c, "uploads/videos")
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
 
 	// Chama o serviço para criar o post
-	post, err := h.postService.CreatePost(request.Title, request.Content, request.Topic, imageURL, authorID)
+	post, err := h.postService.CreatePost(request.Title, request.Content, request.Topic, imageURL, videoURL, authorID)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
