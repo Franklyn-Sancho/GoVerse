@@ -2,6 +2,8 @@ package handlers
 
 import (
 	"net/http"
+	"os"
+	"path/filepath"
 
 	"GoVersi/internal/models"
 	services "GoVersi/internal/service"
@@ -25,7 +27,12 @@ func NewPostHandler(service *services.PostService) *PostHandler {
 }
 
 func (h *PostHandler) CreatePost(c *gin.Context) {
-	var post models.Post
+	var request struct {
+		Title    string `form:"title" binding:"required"`
+		Content  string `form:"content" binding:"required"`
+		Topic    string `form:"topic" binding:"required"`
+		ImageURL string `form:"image_url"`
+	}
 
 	// Pega o user_id do contexto (injetado pelo AuthMiddleware)
 	userID, exists := c.Get("user_id")
@@ -42,13 +49,35 @@ func (h *PostHandler) CreatePost(c *gin.Context) {
 	}
 
 	// Verifica se a requisição contém uma postagem válida
-	if err := c.ShouldBindJSON(&post); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+	if err := c.ShouldBind(&request); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid input"})
 		return
 	}
 
+	// Lidar com o upload da imagem
+	file, err := c.FormFile("image")
+	var imageURL string
+
+	if err == nil {
+		// Verificar e criar a pasta uploads se ela não existir
+		uploadPath := "uploads"
+		if err := os.MkdirAll(uploadPath, os.ModePerm); err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create upload directory"})
+			return
+		}
+
+		// Salvar o arquivo
+		imagePath := filepath.Join(uploadPath, file.Filename)
+		if err := c.SaveUploadedFile(file, imagePath); err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to upload"})
+			return
+		}
+		imageURL = "/" + imagePath // Caminho da imagem
+	}
+
 	// Chama o serviço para criar o post
-	if err := h.postService.CreatePost(&post, authorID); err != nil {
+	post, err := h.postService.CreatePost(request.Title, request.Content, request.Topic, imageURL, authorID)
+	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}

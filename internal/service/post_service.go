@@ -17,17 +17,20 @@ func NewPostService(repo *repository.PostRepository) *PostService {
 	return &PostService{repo: repo}
 }
 
-func (s *PostService) CreatePost(post *models.Post, authorID uuid.UUID) error {
-	// Validações podem ser feitas aqui, como:
-	if post.Title == "" || post.Content == "" {
-		return errors.New("title and content cannot be empty")
+func (s *PostService) CreatePost(title, content, topic, imageURL string, authorID uuid.UUID) (*models.Post, error) {
+	post := &models.Post{
+		Title:    title,
+		Content:  content,
+		Topic:    topic,
+		ImageURL: imageURL,
+		AuthorID: authorID,
 	}
 
-	// Define o AuthorID
-	post.AuthorID = authorID
+	if err := s.repo.Create(post); err != nil {
+		return nil, err
+	}
 
-	// Chama o repositório para criar o post
-	return s.repo.Create(post)
+	return post, nil
 }
 
 func (s *PostService) GetPostByID(id uuid.UUID) (*models.Post, error) {
