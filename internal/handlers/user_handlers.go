@@ -7,7 +7,6 @@ import (
 	"log"
 	"net/http"
 	"os"
-	"path/filepath"
 	"strings"
 
 	"github.com/gin-gonic/gin"
@@ -27,39 +26,36 @@ func SetTokenBlacklistService(s *services.TokenBlacklistService) {
 }
 
 func RegisterUser(c *gin.Context) {
-	var user models.User
+	var request struct {
+		Username string `form:"username" binding:"required"`
+		Email    string `form:"email" binding:"required"`
+		Password string `form:"password" binding:"required"`
+	}
 
-	// Verifica se os dados do usuário foram enviados corretamente
-	if err := c.ShouldBind(&user); err != nil {
+	// Verifica se a requisição contém dados válidos
+	if err := c.ShouldBind(&request); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid user input"})
 		return
 	}
 
-	// Tenta pegar o arquivo de imagem (caso exista)
-	file, err := c.FormFile("image")
-	if err == nil {
-		// Verificar e criar a pasta uploads/imageProfile se ela não existir
-		uploadPath := "uploads/imageProfile"
-		if err := os.MkdirAll(uploadPath, os.ModePerm); err != nil {
-			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create upload directory"})
-			return
-		}
-
-		// Salvar o arquivo no diretório
-		imagePath := filepath.Join(uploadPath, file.Filename)
-		if err := c.SaveUploadedFile(file, imagePath); err != nil {
-			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to upload image"})
-			return
-		}
-		user.ImageProfile = "/" + imagePath // Caminho da imagem salvo no campo ImageProfile
-	} else if err != http.ErrMissingFile {
-		// Se houve um erro diferente de arquivo ausente, retorna erro
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Error handling image upload"})
+	// Chama a função de upload de imagem
+	imageURL, err := utils.HandleImageUpload(c, "uploads/imageProfile")
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
 
+	// Cria o usuário com os dados capturados
+	user := &models.User{
+		Username:     request.Username,
+		Email:        request.Email,
+		Password:     request.Password, // A senha deve ser hashada no serviço
+		ImageProfile: imageURL,
+		IsActive:     true, // Define como true por padrão
+	}
+
 	// Chama o serviço para registrar o usuário
-	if err := userService.RegisterUser(&user); err != nil {
+	if err := userService.RegisterUser(user); err != nil {
 		if err.Error() == "username already exists" {
 			c.JSON(http.StatusConflict, gin.H{"error": "Username already exists"})
 		} else {
@@ -68,7 +64,6 @@ func RegisterUser(c *gin.Context) {
 		return
 	}
 
-	// Retorna o usuário criado
 	c.JSON(http.StatusCreated, user)
 }
 

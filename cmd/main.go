@@ -36,7 +36,6 @@ func main() {
 
 	// Configurar os handlers com os serviços
 	handlers.SetUserService(userService)
-	handlers.SetPostService(postService)                     // Configure o serviço de postagens
 	handlers.SetTokenBlacklistService(tokenBlacklistService) // Configure o serviço de Token Blacklist
 
 	// Criar uma instância do PostHandler

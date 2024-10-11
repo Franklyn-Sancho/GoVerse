@@ -23,7 +23,7 @@ func (s *PostService) CreatePost(title, content, topic, imageURL string, authorI
 		Content:  content,
 		Topic:    topic,
 		ImageURL: imageURL,
-		AuthorID: authorID,
+		AuthorID: authorID, // Associando o autor
 	}
 
 	if err := s.repo.Create(post); err != nil {

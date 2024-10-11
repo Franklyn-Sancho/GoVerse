@@ -33,11 +33,11 @@ func (s *UserService) RegisterUser(user *models.User) error {
 	}
 
 	// Hash da senha antes de salvar no banco
-	hashedPassword, err := utils.HashPassword(user.Password)
+	hashedPassword, err := utils.HashPassword(user.Password) // Aqui você deve garantir que a função HashPassword funcione corretamente
 	if err != nil {
 		return err
 	}
-	user.Password = hashedPassword
+	user.Password = hashedPassword // A senha hashada é atribuída ao usuário
 
 	// Cria o usuário no banco
 	return s.UserRepo.Create(user)

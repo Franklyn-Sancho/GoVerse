@@ -2,24 +2,17 @@ package handlers
 
 import (
 	"net/http"
-	"os"
-	"path/filepath"
 
 	"GoVersi/internal/models"
 	services "GoVersi/internal/service"
+	"GoVersi/internal/utils"
 
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
 )
 
-var postService *services.PostService
-
 type PostHandler struct {
 	postService *services.PostService
-}
-
-func SetPostService(service *services.PostService) {
-	postService = service
 }
 
 func NewPostHandler(service *services.PostService) *PostHandler {
@@ -28,10 +21,9 @@ func NewPostHandler(service *services.PostService) *PostHandler {
 
 func (h *PostHandler) CreatePost(c *gin.Context) {
 	var request struct {
-		Title    string `form:"title" binding:"required"`
-		Content  string `form:"content" binding:"required"`
-		Topic    string `form:"topic" binding:"required"`
-		ImageURL string `form:"image_url"`
+		Title   string `form:"title" binding:"required"`
+		Content string `form:"content" binding:"required"`
+		Topic   string `form:"topic" binding:"required"`
 	}
 
 	// Pega o user_id do contexto (injetado pelo AuthMiddleware)
@@ -54,25 +46,11 @@ func (h *PostHandler) CreatePost(c *gin.Context) {
 		return
 	}
 
-	// Lidar com o upload da imagem
-	file, err := c.FormFile("image")
-	var imageURL string
-
-	if err == nil {
-		// Verificar e criar a pasta uploads se ela não existir
-		uploadPath := "uploads"
-		if err := os.MkdirAll(uploadPath, os.ModePerm); err != nil {
-			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create upload directory"})
-			return
-		}
-
-		// Salvar o arquivo
-		imagePath := filepath.Join(uploadPath, file.Filename)
-		if err := c.SaveUploadedFile(file, imagePath); err != nil {
-			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to upload"})
-			return
-		}
-		imageURL = "/" + imagePath // Caminho da imagem
+	// Chama a função de upload de imagem
+	imageURL, err := utils.HandleImageUpload(c, "uploads")
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
 	}
 
 	// Chama o serviço para criar o post
