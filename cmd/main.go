@@ -22,17 +22,16 @@ func main() {
 	// Conectar ao banco de dados
 	db := connectDatabase()
 
-	// Inicializar o serviço de usuários
-	userService := services.NewUserService(db)
-
 	// Inicializar os repositórios
+	userRepository := repository.NewUserRepository(db)     // Crie uma instância do repositório
+	userService := services.NewUserService(userRepository) // Passe o repositório para o UserService
+
 	postRepository := repository.NewPostRepository(db)
-
 	tokenBlacklistService := services.NewTokenBlacklistService(db)
-
 	friendshipRepository := repository.NewFriendshipRepository(db)
+
 	postService := services.NewPostService(postRepository)
-	friendhipService := services.NewFriendshipService(friendshipRepository)
+	friendshipService := services.NewFriendshipService(friendshipRepository)
 
 	// Configurar os handlers com os serviços
 	handlers.SetUserService(userService)
@@ -42,7 +41,7 @@ func main() {
 	postHandler := handlers.NewPostHandler(postService)
 
 	// Inicializar o FriendshipHandler
-	friendshipHandler := handlers.NewFriendshipHandler(friendhipService)
+	friendshipHandler := handlers.NewFriendshipHandler(friendshipService)
 
 	// Inicializar o router
 	r := routes.SetupRouter(postHandler, friendshipHandler)

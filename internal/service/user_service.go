@@ -8,7 +8,6 @@ import (
 	"os"
 
 	"github.com/google/uuid"
-	"gorm.io/gorm"
 )
 
 type UserService struct {
@@ -16,9 +15,9 @@ type UserService struct {
 }
 
 // NewUserService cria uma nova instância de UserService
-func NewUserService(db *gorm.DB) *UserService {
+func NewUserService(repo repository.UserRepository) *UserService {
 	return &UserService{
-		UserRepo: repository.NewUserRepository(db),
+		UserRepo: repo,
 	}
 }
 
