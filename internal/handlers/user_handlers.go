@@ -34,6 +34,7 @@ func RegisterUser(c *gin.Context) {
 
 	// Verifica se a requisição contém dados válidos
 	if err := c.ShouldBind(&request); err != nil {
+		log.Printf("Erro de validação: %v", err)
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid user input"})
 		return
 	}
@@ -41,6 +42,7 @@ func RegisterUser(c *gin.Context) {
 	// Chama a função de upload de imagem
 	imageURL, err := utils.HandleImageUpload(c, "uploads/imageProfile")
 	if err != nil {
+		log.Printf("Erro ao fazer upload da imagem: %v", err)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
@@ -49,13 +51,14 @@ func RegisterUser(c *gin.Context) {
 	user := &models.User{
 		Username:     request.Username,
 		Email:        request.Email,
-		Password:     request.Password, // A senha deve ser hashada no serviço
+		Password:     request.Password,
 		ImageProfile: imageURL,
-		IsActive:     true, // Define como true por padrão
+		IsActive:     true,
 	}
 
 	// Chama o serviço para registrar o usuário
 	if err := userService.RegisterUser(user); err != nil {
+		log.Printf("Erro ao registrar usuário: %v", err)
 		if err.Error() == "username already exists" {
 			c.JSON(http.StatusConflict, gin.H{"error": "Username already exists"})
 		} else {
@@ -64,6 +67,7 @@ func RegisterUser(c *gin.Context) {
 		return
 	}
 
+	log.Printf("Usuário '%s' registrado com sucesso", user.Username)
 	c.JSON(http.StatusCreated, user)
 }
 
@@ -223,4 +227,25 @@ func PermanentlyDeleteUser(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, gin.H{"message": "User will be deleted in 30 days"})
+}
+
+// ConfirmEmail manipula a confirmação de e-mail
+func ConfirmEmail(c *gin.Context) {
+	userID := c.Query("user")
+
+	// Encontre o usuário pelo ID
+	user, err := userService.GetUserById(userID)
+	if err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "User not found"})
+		return
+	}
+
+	// Atualize o status de verificação do e-mail
+	user.IsEmailVerified = true
+	if err := userService.UpdateUser(user); err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to verify email"})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"message": "Email confirmed successfully"})
 }

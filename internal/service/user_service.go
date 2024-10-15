@@ -5,6 +5,7 @@ import (
 	"GoVersi/internal/repository"
 	"GoVersi/internal/utils"
 	"errors"
+	"log"
 	"os"
 
 	"github.com/google/uuid"
@@ -22,24 +23,43 @@ func NewUserService(repo repository.UserRepository) *UserService {
 }
 
 func (s *UserService) RegisterUser(user *models.User) error {
+	log.Printf("Tentando registrar usuário: %s", user.Username)
+
 	// Verifica se o username já existe
 	exists, err := s.UserRepo.UsernameExists(user.Username)
 	if err != nil {
+		log.Printf("Erro ao verificar existência do username: %v", err)
 		return err
 	}
 	if exists {
+		log.Printf("O username '%s' já existe", user.Username)
 		return errors.New("username already exists")
 	}
 
 	// Hash da senha antes de salvar no banco
-	hashedPassword, err := utils.HashPassword(user.Password) // Aqui você deve garantir que a função HashPassword funcione corretamente
+	hashedPassword, err := utils.HashPassword(user.Password)
 	if err != nil {
+		log.Printf("Erro ao hash da senha: %v", err)
 		return err
 	}
-	user.Password = hashedPassword // A senha hashada é atribuída ao usuário
+	user.Password = hashedPassword
 
 	// Cria o usuário no banco
-	return s.UserRepo.Create(user)
+	if err := s.UserRepo.Create(user); err != nil {
+		log.Printf("Erro ao criar usuário no banco: %v", err)
+		return err
+	}
+
+	/* // Enviar e-mail de confirmação
+	subject := "Confirmação de Registro"
+	body := fmt.Sprintf("Olá %s, \n\nPor favor, clique no link abaixo para confirmar seu e-mail:\nhttp://example.com/confirm?user=%s", user.Username, user.ID.String())
+	if err := utils.SendEmail(user.Email, subject, body); err != nil {
+		log.Printf("Erro ao enviar e-mail de confirmação: %v", err)
+		return err
+	} */
+
+	log.Printf("Usuário '%s' registrado com sucesso", user.Username)
+	return nil
 }
 
 // Função para login de usuário
@@ -58,6 +78,11 @@ func (s *UserService) LoginUser(email, password string) (string, error) {
 
 	// Converte o UUID para string antes de chamar GenerateJWT
 	return utils.GenerateJWT(user.ID.String(), secretKey) // Use a chave secreta aqui
+}
+
+// UpdateUser atualiza os dados do usuário no banco de dados
+func (s *UserService) UpdateUser(user *models.User) error {
+	return s.UserRepo.UpdateUser(user)
 }
 
 // Suspende um usuário

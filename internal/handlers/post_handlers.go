@@ -99,7 +99,6 @@ func (h *PostHandler) UpdatePost(c *gin.Context) {
 		return
 	}
 
-	// Chama o serviço para atualizar o post
 	updatedPost, err := h.postService.UpdatePost(postID, &updatedPostData)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})

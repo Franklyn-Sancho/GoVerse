@@ -2,7 +2,9 @@ package utils
 
 import (
 	"errors"
+	"fmt"
 	"net/http"
+	"net/smtp"
 	"os"
 	"path/filepath"
 
@@ -71,4 +73,18 @@ func HandleVideoUpload(c *gin.Context, uploadPath string) (string, error) {
 	}
 
 	return "", nil // Retorna vazio se não houver vídeo
+}
+
+func SendEmail(to string, subject string, body string) error {
+	from := "your_email@example.com" // pode ser qualquer endereço de e-mail
+
+	// Configura o servidor SMTP do MailHog
+	smtpHost := "localhost" // MailHog normalmente está rodando no localhost
+	smtpPort := "1025"      // porta do MailHog
+
+	// Cria a mensagem
+	msg := []byte(fmt.Sprintf("To: %s\r\nSubject: %s\r\n\r\n%s", to, subject, body))
+
+	// Envia o e-mail sem autenticação
+	return smtp.SendMail(smtpHost+":"+smtpPort, nil, from, []string{to}, msg)
 }

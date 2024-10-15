@@ -14,6 +14,9 @@ func SetupUserRoutes(router *gin.RouterGroup) {
 		users.GET("/email/:email", handlers.GetUserByEmail)
 		users.DELETE("/:id", handlers.DeleteUser)
 
+		// Outras rotas...
+		router.GET("/confirm-email", handlers.ConfirmEmail)
+
 		// Novas funcionalidades relacionadas ao usuário
 		users.PATCH("/:id/suspend", handlers.SuspendUser)
 		users.POST("/:id/request-deletion", handlers.RequestAccountDeletion)

@@ -12,10 +12,11 @@ type User struct {
 	Username            string     `json:"username" gorm:"unique;not null"`
 	Email               string     `json:"email" gorm:"unique;not null"`
 	Password            string     `json:"password" gorm:"not null"`
-	ImageProfile        string     `json:"image_url"`           // Novo campo para armazenar o caminho da imagem
-	IsActive            bool       `json:"is_active"`           // true se o usuário está ativo, false se suspenso
-	IsPendingDeletion   bool       `json:"is_pending_deletion"` // true se a exclusão foi solicitada
+	ImageProfile        string     `json:"image_url"`
+	IsActive            bool       `json:"is_active"`
+	IsPendingDeletion   bool       `json:"is_pending_deletion"`
 	DeletionRequestedAt *time.Time `json:"deletion_requested_at,omitempty"`
+	IsEmailVerified     bool       `json:"is_email_verified" gorm:"default:false"` // Novo campo para verificar se o e-mail foi confirmado
 }
 
 // Método para gerar um novo UUID
