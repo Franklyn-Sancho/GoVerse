@@ -29,9 +29,11 @@ func main() {
 	postRepository := repository.NewPostRepository(db)
 	tokenBlacklistService := services.NewTokenBlacklistService(db)
 	friendshipRepository := repository.NewFriendshipRepository(db)
+	commentRepository := repository.NewCommentRepository(db)
 
 	postService := services.NewPostService(postRepository)
 	friendshipService := services.NewFriendshipService(friendshipRepository)
+	commentService := services.NewCommentService(commentRepository)
 
 	// Configurar os handlers com os serviços
 	handlers.SetUserService(userService)
@@ -43,8 +45,10 @@ func main() {
 	// Inicializar o FriendshipHandler
 	friendshipHandler := handlers.NewFriendshipHandler(friendshipService)
 
+	commentHandler := handlers.NewCommentHandler(commentService)
+
 	// Inicializar o router
-	r := routes.SetupRouter(postHandler, friendshipHandler)
+	r := routes.SetupRouter(postHandler, friendshipHandler, commentHandler)
 
 	// Iniciar o servidor
 	startServer(r)
@@ -80,6 +84,11 @@ func connectDatabase() *gorm.DB {
 	}
 
 	err = db.AutoMigrate(&models.Friendship{})
+	if err != nil {
+		log.Fatalf("Failed to migrate database: %v", err)
+	}
+
+	err = db.AutoMigrate(&models.Comment{})
 	if err != nil {
 		log.Fatalf("Failed to migrate database: %v", err)
 	}
