@@ -76,6 +76,11 @@ func (m *MockUserRepository) UpdateUser(user *models.User) error {
 	return args.Error(0)
 }
 
+func (m *MockUserRepository) FindByEmailConfirmToken(token string) (*models.User, error) {
+	args := m.Called(token)
+	return args.Get(0).(*models.User), args.Error(1)
+}
+
 func TestLoginUser(t *testing.T) {
 	mockRepo := new(MockUserRepository)
 	userService := services.NewUserService(mockRepo)

@@ -16,11 +16,13 @@ type User struct {
 	IsActive            bool       `json:"is_active"`
 	IsPendingDeletion   bool       `json:"is_pending_deletion"`
 	DeletionRequestedAt *time.Time `json:"deletion_requested_at,omitempty"`
-	IsEmailVerified     bool       `json:"is_email_verified" gorm:"default:false"` // Novo campo para verificar se o e-mail foi confirmado
+	IsEmailVerified     bool       `json:"is_email_verified" gorm:"default:false"`
+	EmailConfirmToken   string     `json:"email_confirm_token" gorm:"unique;not null"` // Novo campo para o token de confirmação
 }
 
-// Método para gerar um novo UUID
+// Método para gerar um novo UUID e token
 func (u *User) BeforeCreate(tx *gorm.DB) (err error) {
 	u.ID = uuid.New()
+	u.EmailConfirmToken = uuid.New().String() // Gera um token único
 	return
 }

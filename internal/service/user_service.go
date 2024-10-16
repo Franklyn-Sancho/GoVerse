@@ -50,13 +50,10 @@ func (s *UserService) RegisterUser(user *models.User) error {
 		return err
 	}
 
-	/* // Enviar e-mail de confirmação
-	subject := "Confirmação de Registro"
-	body := fmt.Sprintf("Olá %s, \n\nPor favor, clique no link abaixo para confirmar seu e-mail:\nhttp://example.com/confirm?user=%s", user.Username, user.ID.String())
-	if err := utils.SendEmail(user.Email, subject, body); err != nil {
+	if err := utils.SendConfirmationEmail(user.Email, user.Username, user.EmailConfirmToken); err != nil {
 		log.Printf("Erro ao enviar e-mail de confirmação: %v", err)
 		return err
-	} */
+	}
 
 	log.Printf("Usuário '%s' registrado com sucesso", user.Username)
 	return nil
@@ -143,4 +140,9 @@ func (s *UserService) PermanentlyDeleteUser(id string) error {
 	}
 	// Lógica para deletar o usuário permanentemente
 	return s.UserRepo.PermanentlyDeleteUser(userID) // Chame o método do repositório
+}
+
+// Implementação do método FindByEmailConfirmToken no serviço
+func (s *UserService) FindByEmailConfirmToken(token string) (*models.User, error) {
+	return s.UserRepo.FindByEmailConfirmToken(token)
 }

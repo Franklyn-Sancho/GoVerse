@@ -231,21 +231,22 @@ func PermanentlyDeleteUser(c *gin.Context) {
 
 // ConfirmEmail manipula a confirmação de e-mail
 func ConfirmEmail(c *gin.Context) {
-	userID := c.Query("user")
+	token := c.Query("token")
 
-	// Encontre o usuário pelo ID
-	user, err := userService.GetUserById(userID)
+	// Encontre o usuário pelo token
+	user, err := userService.FindByEmailConfirmToken(token)
 	if err != nil {
-		c.JSON(http.StatusNotFound, gin.H{"error": "User not found"})
+		c.JSON(http.StatusNotFound, gin.H{"error": "Usuário não encontrado ou token inválido"})
 		return
 	}
 
 	// Atualize o status de verificação do e-mail
 	user.IsEmailVerified = true
+	user.EmailConfirmToken = "" // Limpa o token após a confirmação
 	if err := userService.UpdateUser(user); err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to verify email"})
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Falha ao verificar e-mail"})
 		return
 	}
 
-	c.JSON(http.StatusOK, gin.H{"message": "Email confirmed successfully"})
+	c.JSON(http.StatusOK, gin.H{"message": "E-mail confirmado com sucesso"})
 }

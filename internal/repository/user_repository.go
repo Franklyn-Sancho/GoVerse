@@ -28,21 +28,21 @@ func (r *UserRepositoryImpl) GetUserByID(userID uuid.UUID) (*models.User, error)
 	return &user, nil
 }
 
+// Implementação do método FindByEmailConfirmToken
+func (r *UserRepositoryImpl) FindByEmailConfirmToken(token string) (*models.User, error) {
+	var user models.User
+	if err := r.DB.Where("email_confirm_token = ?", token).First(&user).Error; err != nil {
+		return nil, err
+	}
+	return &user, nil
+}
+
 func (r *UserRepositoryImpl) UpdateUser(user *models.User) error {
 	return r.DB.Save(user).Error
 }
 
 func (r *UserRepositoryImpl) DeleteUser(userID uuid.UUID) error {
 	return r.DB.Delete(&models.User{}, userID).Error
-}
-
-func (r *UserRepositoryImpl) GetUsersWithPendingDeletion() ([]models.User, error) {
-	var users []models.User
-	// Implemente a lógica para obter usuários com solicitação de exclusão pendente
-	if err := r.DB.Where("is_pending_deletion = ?", true).Find(&users).Error; err != nil {
-		return nil, err
-	}
-	return users, nil
 }
 
 // Implementação do método Create
@@ -61,6 +61,15 @@ func (r *UserRepositoryImpl) UsernameExists(username string) (bool, error) {
 		return false, err // Outro erro
 	}
 	return true, nil // Usuário encontrado
+}
+
+func (r *UserRepositoryImpl) GetUsersWithPendingDeletion() ([]models.User, error) {
+	var users []models.User
+	// Implemente a lógica para obter usuários com solicitação de exclusão pendente
+	if err := r.DB.Where("is_pending_deletion = ?", true).Find(&users).Error; err != nil {
+		return nil, err
+	}
+	return users, nil
 }
 
 // Implementação do método FindByEmail

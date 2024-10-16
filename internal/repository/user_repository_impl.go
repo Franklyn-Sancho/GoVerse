@@ -24,4 +24,5 @@ type UserRepository interface {
 	FindByID(userID uuid.UUID) (*models.User, error)      // Para buscar usuário por ID
 	FindByUsername(username string) (*models.User, error) // Para buscar usuário por nome de usuário
 	RequestAccountDeletion(userID uuid.UUID) error        // Para solicitar a exclusão de conta
+	FindByEmailConfirmToken(token string) (*models.User, error)
 }

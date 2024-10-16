@@ -28,6 +28,7 @@ func SetupRoutes(router *gin.Engine, postHandler *handlers.PostHandler, friendsh
 	// Rotas públicas (não requerem autenticação)
 	router.POST("/login", handlers.Login)
 	router.POST("/register", handlers.RegisterUser)
+	router.GET("/confirm-email", handlers.ConfirmEmail)
 
 	// Rotas protegidas (requerem autenticação)
 	auth := router.Group("/")
