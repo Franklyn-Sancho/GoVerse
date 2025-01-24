@@ -5,57 +5,80 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
+	"strings"
 
 	"github.com/gin-gonic/gin"
 )
 
 func HandleImageUpload(c *gin.Context, uploadPath string) (string, error) {
-	// Tenta pegar o arquivo de imagem (caso exista)
+	contentType := c.GetHeader("Content-Type")
+
+	// If it's JSON request, return empty string without error
+	if contentType == "application/json" {
+		return "", nil
+	}
+
+	// Check if it's multipart form data
+	if !strings.Contains(contentType, "multipart/form-data") {
+		return "", nil
+	}
+
+	// Try to get the image file
 	file, err := c.FormFile("image")
-	if err != nil && err != http.ErrMissingFile {
-		return "", errors.New("Error handling image upload")
+	if err != nil {
+		if err == http.ErrMissingFile {
+			return "", nil // No file uploaded, return empty string
+		}
+		return "", err
 	}
 
-	if err == nil {
-		// Verificar e criar a pasta de upload se não existir
-		if err := os.MkdirAll(uploadPath, os.ModePerm); err != nil {
-			return "", errors.New("Failed to create upload directory")
-		}
-
-		// Salvar o arquivo no diretório
-		imagePath := filepath.Join(uploadPath, file.Filename)
-		if err := c.SaveUploadedFile(file, imagePath); err != nil {
-			return "", errors.New("Failed to upload image")
-		}
-
-		return "/" + imagePath, nil // Retorna o caminho da imagem
+	// Create upload directory if it doesn't exist
+	if err := os.MkdirAll(uploadPath, os.ModePerm); err != nil {
+		return "", errors.New("failed to create upload directory")
 	}
 
-	return "", nil // Retorna vazio se não houver imagem
+	// Save the file
+	imagePath := filepath.Join(uploadPath, file.Filename)
+	if err := c.SaveUploadedFile(file, imagePath); err != nil {
+		return "", errors.New("failed to upload image")
+	}
+
+	return "/" + imagePath, nil
 }
 
 // Função para lidar com o upload de vídeo
 func HandleVideoUpload(c *gin.Context, uploadPath string) (string, error) {
-	// Tenta pegar o arquivo de vídeo (caso exista)
+	contentType := c.GetHeader("Content-Type")
+
+	// If it's JSON request, return empty string without error
+	if contentType == "application/json" {
+		return "", nil
+	}
+
+	// Check if it's multipart form data
+	if !strings.Contains(contentType, "multipart/form-data") {
+		return "", nil
+	}
+
+	// Try to get the video file
 	file, err := c.FormFile("video")
-	if err != nil && err != http.ErrMissingFile {
-		return "", errors.New("Error handling video upload")
+	if err != nil {
+		if err == http.ErrMissingFile {
+			return "", nil // No file uploaded, return empty string
+		}
+		return "", err
 	}
 
-	if err == nil {
-		// Verificar e criar a pasta de upload se não existir
-		if err := os.MkdirAll(uploadPath, os.ModePerm); err != nil {
-			return "", errors.New("Failed to create upload directory")
-		}
-
-		// Salvar o arquivo no diretório
-		videoPath := filepath.Join(uploadPath, file.Filename)
-		if err := c.SaveUploadedFile(file, videoPath); err != nil {
-			return "", errors.New("Failed to upload video")
-		}
-
-		return "/" + videoPath, nil // Retorna o caminho do vídeo
+	// Create upload directory if it doesn't exist
+	if err := os.MkdirAll(uploadPath, os.ModePerm); err != nil {
+		return "", errors.New("failed to create upload directory")
 	}
 
-	return "", nil // Retorna vazio se não houver vídeo
+	// Save the file
+	videoPath := filepath.Join(uploadPath, file.Filename)
+	if err := c.SaveUploadedFile(file, videoPath); err != nil {
+		return "", errors.New("failed to upload video")
+	}
+
+	return "/" + videoPath, nil
 }

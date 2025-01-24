@@ -21,46 +21,57 @@ func NewPostHandler(service *services.PostService) *PostHandler {
 
 func (h *PostHandler) CreatePost(c *gin.Context) {
 	var request struct {
-		Title   string `form:"title" binding:"required"`
-		Content string `form:"content" binding:"required"`
-		Topic   string `form:"topic" binding:"required"`
+		Title   string `form:"title" json:"title" binding:"required"`
+		Content string `form:"content" json:"content" binding:"required"`
+		Topic   string `form:"topic" json:"topic" binding:"required"`
 	}
 
-	// Pega o user_id do contexto (injetado pelo AuthMiddleware)
+	// Obtém o `user_id` do contexto (injetado pelo AuthMiddleware)
 	userID, exists := c.Get("user_id")
 	if !exists {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "User not authenticated"})
 		return
 	}
 
-	// Converte o userID para UUID
+	// Converte o `user_id` para UUID
 	authorID, err := uuid.Parse(userID.(string))
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid user ID"})
 		return
 	}
 
-	// Verifica se a requisição contém uma postagem válida
-	if err := c.ShouldBind(&request); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid input"})
+	// Detecta automaticamente o tipo de requisição (JSON ou form-data)
+	contentType := c.ContentType()
+	if contentType == "application/json" {
+		if err := c.ShouldBindJSON(&request); err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid JSON input"})
+			return
+		}
+	} else if contentType == "multipart/form-data" {
+		if err := c.ShouldBind(&request); err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid form-data input"})
+			return
+		}
+	} else {
+		c.JSON(http.StatusUnsupportedMediaType, gin.H{"error": "Unsupported content type"})
 		return
 	}
 
-	// Chama a função de upload de imagem
+	// Upload de imagem (caso exista)
 	imageURL, err := utils.HandleImageUpload(c, "uploads/images")
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
 
-	// Chama a função de upload de vídeo
+	// Upload de vídeo (caso exista)
 	videoURL, err := utils.HandleVideoUpload(c, "uploads/videos")
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
 
-	// Chama o serviço para criar o post
+	// Criação do post via serviço
 	post, err := h.postService.CreatePost(request.Title, request.Content, request.Topic, imageURL, videoURL, authorID)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})

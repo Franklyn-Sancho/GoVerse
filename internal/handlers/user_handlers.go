@@ -27,19 +27,21 @@ func SetTokenBlacklistService(s *services.TokenBlacklistService) {
 
 func RegisterUser(c *gin.Context) {
 	var request struct {
-		Username string `form:"username" binding:"required"`
-		Email    string `form:"email" binding:"required"`
-		Password string `form:"password" binding:"required"`
+		Username string `json:"username" form:"username" binding:"required"`
+		Email    string `json:"email" form:"email" binding:"required"`
+		Password string `json:"password" form:"password" binding:"required"`
 	}
 
-	// Verifica se a requisição contém dados válidos
 	if err := c.ShouldBind(&request); err != nil {
-		log.Printf("Erro de validação: %v", err)
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid user input"})
-		return
+		// If form binding fails, try JSON
+		if err := c.ShouldBindJSON(&request); err != nil {
+			log.Printf("Erro de validação: %v", err)
+			c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid user input"})
+			return
+		}
 	}
 
-	// Chama a função de upload de imagem
+	// Handle image upload
 	imageURL, err := utils.HandleImageUpload(c, "uploads/imageProfile")
 	if err != nil {
 		log.Printf("Erro ao fazer upload da imagem: %v", err)
