@@ -20,7 +20,6 @@ type User struct {
 	EmailConfirmToken   string     `json:"email_confirm_token" gorm:"unique;not null"` // Novo campo para o token de confirmação
 }
 
-// Método para gerar um novo UUID e token
 func (u *User) BeforeCreate(tx *gorm.DB) (err error) {
 	u.ID = uuid.New()
 	u.EmailConfirmToken = uuid.New().String() // Gera um token único

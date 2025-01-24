@@ -20,12 +20,12 @@ func main() {
 	// Carregar variáveis de ambiente
 	loadEnv()
 
-	// Conectar ao banco de dados
+	// database connect
 	db := connectDatabase()
 
-	// Inicializar os repositórios
-	userRepository := repository.NewUserRepository(db)     // Crie uma instância do repositório
-	userService := services.NewUserService(userRepository) // Passe o repositório para o UserService
+	// start repositories and services
+	userRepository := repository.NewUserRepository(db)     // create a nre instance of repository
+	userService := services.NewUserService(userRepository) // import repository to service
 
 	postRepository := repository.NewPostRepository(db)
 	tokenBlacklistService := services.NewTokenBlacklistService(db)
@@ -38,34 +38,36 @@ func main() {
 	commentService := services.NewCommentService(commentRepository)
 	likeService := services.NewLikeService(likeRepository)
 
-	// Configurar os handlers com os serviços
+	// Configure the handlers with the services
 	handlers.SetUserService(userService)
-	handlers.SetTokenBlacklistService(tokenBlacklistService) // Configure o serviço de Token Blacklist
+	handlers.SetTokenBlacklistService(tokenBlacklistService) // Configure the Token Blacklist service
 
-	// Criar uma instância do PostHandler
+	// Create an instance of PostHandler
 	postHandler := handlers.NewPostHandler(postService)
 
-	// Inicializar o FriendshipHandler
+	// Initialize the FriendshipHandler
 	friendshipHandler := handlers.NewFriendshipHandler(friendshipService)
 
 	commentHandler := handlers.NewCommentHandler(commentService)
 
 	likeHandler := handlers.NewLikeHandler(likeService)
 
-	// Inicializar o router
+	// Initialize the router
 	r := routes.SetupRouter(postHandler, friendshipHandler, commentHandler, likeHandler)
 
 	r.Static("/uploads", "./uploads")
 
-	// Criar diretório de uploads se não existir
+	// Create the uploads directory if it doesn't exist
 	os.MkdirAll("uploads/imageProfile", 0755)
 	os.MkdirAll("uploads/images", 0755)
 	os.MkdirAll("uploads/videos", 0755)
-	// Iniciar o servidor
+
+	// Start the server
 	startServer(r)
+
 }
 
-// loadEnv carrega as variáveis de ambiente do arquivo .env
+// loadEnv load .env
 func loadEnv() {
 	if err := godotenv.Load(); err != nil {
 		log.Println("No .env file found. Using environment variables.")
@@ -78,7 +80,7 @@ func connectDatabase() *gorm.DB {
 		log.Fatalf("Failed to connect to database: %v", err)
 	}
 
-	// Faz a migração automática para criar as tabelas necessárias
+	// automatic migrations
 	err = db.AutoMigrate(&models.User{})
 	if err != nil {
 		log.Fatalf("Failed to migrate database: %v", err)
@@ -112,7 +114,7 @@ func connectDatabase() *gorm.DB {
 	return db
 }
 
-// startServer inicia o servidor na porta especificada
+// start server on :8080 port
 func startServer(r *gin.Engine) {
 	if err := r.Run(":8080"); err != nil {
 		log.Fatalf("Failed to start server: %v", err)

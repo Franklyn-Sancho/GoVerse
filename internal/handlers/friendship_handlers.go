@@ -26,28 +26,24 @@ func (h *FriendshipHandler) SendFriendRequest(c *gin.Context) {
 		return
 	}
 
-	// Pega o user_id do contexto (injetado pelo AuthMiddleware)
 	userID, exists := c.Get("user_id")
 	if !exists {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "User not authenticated"})
 		return
 	}
 
-	// Converter o userID (requester) para UUID
 	requesterUUID, err := uuid.Parse(userID.(string))
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid requester ID"})
 		return
 	}
 
-	// Converter o AddresseeID para UUID
 	addresseeUUID, err := uuid.Parse(request.AddresseeID)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid addressee ID"})
 		return
 	}
 
-	// Chama o serviço para enviar a solicitação de amizade
 	if err := h.friendshipService.SendFriendRequest(addresseeUUID, requesterUUID); err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to send friend request"})
 		return

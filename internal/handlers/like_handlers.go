@@ -23,14 +23,12 @@ func (h *LikeHandler) LikePost(c *gin.Context) {
 		return
 	}
 
-	// Pega o user_id do contexto
 	userID, exists := c.Get("user_id")
 	if !exists {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "User not authenticated"})
 		return
 	}
 
-	// Converte o userID para UUID
 	userUUID, err := uuid.Parse(userID.(string))
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid user ID"})
@@ -52,14 +50,12 @@ func (h *LikeHandler) LikeComment(c *gin.Context) {
 		return
 	}
 
-	// Pega o user_id do contexto
 	userID, exists := c.Get("user_id")
 	if !exists {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "User not authenticated"})
 		return
 	}
 
-	// Converte o userID para UUID
 	userUUID, err := uuid.Parse(userID.(string))
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid user ID"})
@@ -81,14 +77,12 @@ func (h *LikeHandler) UnlikeComment(c *gin.Context) {
 		return
 	}
 
-	// Pega o user_id do contexto
 	userID, exists := c.Get("user_id")
 	if !exists {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "User not authenticated"})
 		return
 	}
 
-	// Converte o userID para UUID
 	userUUID, err := uuid.Parse(userID.(string))
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid user ID"})
@@ -110,14 +104,12 @@ func (h *LikeHandler) UnlikePost(c *gin.Context) {
 		return
 	}
 
-	// Pega o user_id do contexto
 	userID, exists := c.Get("user_id")
 	if !exists {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "User not authenticated"})
 		return
 	}
 
-	// Converte o userID para UUID
 	userUUID, err := uuid.Parse(userID.(string))
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid user ID"})

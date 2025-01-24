@@ -14,14 +14,10 @@ func SetupUserRoutes(router *gin.RouterGroup) {
 		users.GET("/email/:email", handlers.GetUserByEmail)
 		users.DELETE("/:id", handlers.DeleteUser)
 
-		// Outras rotas...
-
-		// Novas funcionalidades relacionadas ao usuário
 		users.PATCH("/:id/suspend", handlers.SuspendUser)
 		users.POST("/:id/request-deletion", handlers.RequestAccountDeletion)
 		users.DELETE("/:id/permanently-delete", handlers.PermanentlyDeleteUser)
 
-		// Logout
 		users.POST("/logout", handlers.Logout)
 	}
 }

@@ -14,7 +14,7 @@ type Claims struct {
 }
 
 func GenerateJWT(userID string, secretKey string) (string, error) {
-	log.Printf("Secret Key: %s", secretKey) // Log da chave secreta
+	log.Printf("Secret Key: %s", secretKey)
 
 	claims := &Claims{
 		UserID: userID,
@@ -41,7 +41,7 @@ func ParseTokenClaims(tokenString string, secretKey string) (*Claims, error) {
 	})
 
 	if err != nil {
-		return nil, err // Retorna erro se o token não pôde ser analisado
+		return nil, err
 	}
 
 	if claims, ok := token.Claims.(*Claims); ok && token.Valid {

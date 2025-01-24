@@ -9,17 +9,15 @@ import (
 	"gorm.io/gorm"
 )
 
-// UserRepositoryImpl é uma implementação da interface UserRepository
 type UserRepositoryImpl struct {
 	DB *gorm.DB
 }
 
-// NewUserRepository cria uma nova instância de UserRepositoryImpl
 func NewUserRepository(db *gorm.DB) *UserRepositoryImpl {
 	return &UserRepositoryImpl{DB: db}
 }
 
-// Implementação da interface
+// implemetantion of GetUserById
 func (r *UserRepositoryImpl) GetUserByID(userID uuid.UUID) (*models.User, error) {
 	var user models.User
 	if err := r.DB.Where("id = ?", userID).First(&user).Error; err != nil {
@@ -28,7 +26,7 @@ func (r *UserRepositoryImpl) GetUserByID(userID uuid.UUID) (*models.User, error)
 	return &user, nil
 }
 
-// Implementação do método FindByEmailConfirmToken
+// implementation of FindByEmailConfirmToken
 func (r *UserRepositoryImpl) FindByEmailConfirmToken(token string) (*models.User, error) {
 	var user models.User
 	if err := r.DB.Where("email_confirm_token = ?", token).First(&user).Error; err != nil {
@@ -45,12 +43,12 @@ func (r *UserRepositoryImpl) DeleteUser(userID uuid.UUID) error {
 	return r.DB.Delete(&models.User{}, userID).Error
 }
 
-// Implementação do método Create
+// implementation of method create
 func (r *UserRepositoryImpl) Create(user *models.User) error {
 	return r.DB.Create(user).Error
 }
 
-// Implementação do método UsernameExists
+// implementation of UsernameExists
 func (r *UserRepositoryImpl) UsernameExists(username string) (bool, error) {
 	var count int64
 	err := r.DB.Model(&models.User{}).Where("username = ?", username).Count(&count).Error
@@ -60,6 +58,7 @@ func (r *UserRepositoryImpl) UsernameExists(username string) (bool, error) {
 	return count > 0, nil
 }
 
+// implementation of GetUsersWithPendingDeletion
 func (r *UserRepositoryImpl) GetUsersWithPendingDeletion() ([]models.User, error) {
 	var users []models.User
 	// Implemente a lógica para obter usuários com solicitação de exclusão pendente
@@ -69,7 +68,7 @@ func (r *UserRepositoryImpl) GetUsersWithPendingDeletion() ([]models.User, error
 	return users, nil
 }
 
-// Implementação do método FindByEmail
+// implementation of FindByEmail
 func (r *UserRepositoryImpl) FindByEmail(email string) (*models.User, error) {
 	var user models.User
 	if err := r.DB.Where("email = ?", email).First(&user).Error; err != nil {
@@ -81,7 +80,7 @@ func (r *UserRepositoryImpl) FindByEmail(email string) (*models.User, error) {
 	return &user, nil
 }
 
-// Implementação do método FindByID
+// implementation FindByID
 func (r *UserRepositoryImpl) FindByID(userID uuid.UUID) (*models.User, error) {
 	var user models.User
 	if err := r.DB.Where("id = ?", userID).First(&user).Error; err != nil {
@@ -90,7 +89,7 @@ func (r *UserRepositoryImpl) FindByID(userID uuid.UUID) (*models.User, error) {
 	return &user, nil
 }
 
-// Implementação do método FindByUsername
+// implementation of FindByUsername
 func (r *UserRepositoryImpl) FindByUsername(username string) (*models.User, error) {
 	var user models.User
 	if err := r.DB.Where("username = ?", username).First(&user).Error; err != nil {
@@ -99,7 +98,7 @@ func (r *UserRepositoryImpl) FindByUsername(username string) (*models.User, erro
 	return &user, nil
 }
 
-// Implementação do método Delete
+// implementation of método Delete
 func (r *UserRepositoryImpl) Delete(userID uuid.UUID) error {
 	var user models.User
 	if err := r.DB.Where("id = ?", userID).First(&user).Error; err != nil {
@@ -108,7 +107,7 @@ func (r *UserRepositoryImpl) Delete(userID uuid.UUID) error {
 	return r.DB.Delete(&user).Error
 }
 
-// Implementação do método SuspendUser
+// implementation of SuspendUser
 func (r *UserRepositoryImpl) SuspendUser(userID uuid.UUID) error {
 	user, err := r.GetUserByID(userID)
 	if err != nil {
@@ -118,7 +117,7 @@ func (r *UserRepositoryImpl) SuspendUser(userID uuid.UUID) error {
 	return r.UpdateUser(user)
 }
 
-// Implementação do método RequestAccountDeletion
+// implementation of RequestAccountDeletion
 func (r *UserRepositoryImpl) RequestAccountDeletion(userID uuid.UUID) error {
 	user, err := r.GetUserByID(userID)
 	if err != nil {
@@ -130,7 +129,7 @@ func (r *UserRepositoryImpl) RequestAccountDeletion(userID uuid.UUID) error {
 	return r.UpdateUser(user)
 }
 
-// Implementação do método PermanentlyDeleteUser
+// implementation of PermanentlyDeleteUser
 func (r *UserRepositoryImpl) PermanentlyDeleteUser(userID uuid.UUID) error {
 	return r.DeleteUser(userID) // Deleta o usuário permanentemente
 }

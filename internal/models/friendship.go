@@ -25,7 +25,7 @@ type Friendship struct {
 	UpdatedAt   time.Time        `json:"updated_at"`
 }
 
-// Validar o status antes de salvar
+// validate status before to save
 func (f *Friendship) Validate() error {
 	switch f.Status {
 	case StatusPending, StatusAccepted, StatusDeclined:

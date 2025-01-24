@@ -17,7 +17,6 @@ func NewCommentService(repo *repository.CommentRepository) *CommentService {
 	return &CommentService{repo: repo}
 }
 
-// Ajustando a função CreateComment para incluir o PostID
 func (s *CommentService) CreateComment(content, imageURL string, postID, authorID uuid.UUID) (*models.Comment, error) {
 	comment := &models.Comment{
 		Content:  content,
@@ -33,7 +32,6 @@ func (s *CommentService) CreateComment(content, imageURL string, postID, authorI
 	return comment, nil
 }
 
-// Função para buscar todos os comentários de um post específico
 func (s *CommentService) GetCommentsByPostID(postID uuid.UUID) ([]*models.Comment, error) {
 	comments, err := s.repo.FindByPostID(postID)
 	if err != nil {
@@ -51,17 +49,14 @@ func (s *CommentService) GetCommentByID(id uuid.UUID) (*models.Comment, error) {
 }
 
 func (s *CommentService) UpdateComment(commentID uuid.UUID, updatedData *models.Comment) (*models.Comment, error) {
-	// Busca o comment existente
 	existingComment, err := s.GetCommentByID(commentID)
 	if err != nil {
 		return nil, err
 	}
 
-	// Atualiza os campos com as novas informações, mantendo o que não mudou
 	existingComment.Content = updatedData.Content
 	existingComment.UpdatedAt = time.Now()
 
-	// Salva a atualização
 	if err := s.repo.Update(existingComment); err != nil {
 		return nil, err
 	}
@@ -69,6 +64,5 @@ func (s *CommentService) UpdateComment(commentID uuid.UUID, updatedData *models.
 }
 
 func (s *CommentService) DeleteComment(id uuid.UUID) error {
-	// Pode fazer validações antes de deletar, se necessário
 	return s.repo.Delete(id)
 }

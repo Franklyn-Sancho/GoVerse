@@ -17,7 +17,6 @@ func NewTokenBlacklistService(db *gorm.DB) *TokenBlacklistService {
 	return &TokenBlacklistService{DB: db}
 }
 
-// Adiciona um token à blacklist com a data de expiração
 func (s *TokenBlacklistService) AddToTokenBlacklist(token string, expiresAt time.Time) error {
 	tokenBlacklistEntry := models.TokenBlacklist{
 		Token:     token,
@@ -26,7 +25,6 @@ func (s *TokenBlacklistService) AddToTokenBlacklist(token string, expiresAt time
 	return s.DB.Create(&tokenBlacklistEntry).Error
 }
 
-// Verifica se um token está na blacklist
 func (s *TokenBlacklistService) IsTokenBlacklisted(token string) (bool, error) {
 	var count int64
 	err := s.DB.Model(&models.TokenBlacklist{}).Where("token = ?", token).Count(&count).Error
@@ -36,12 +34,10 @@ func (s *TokenBlacklistService) IsTokenBlacklisted(token string) (bool, error) {
 	return count > 0, nil
 }
 
-// Remove tokens expirados da blacklist
 func (s *TokenBlacklistService) RemoveExpiredTokens() error {
 	return s.DB.Where("expires_at < ?", time.Now()).Delete(&models.TokenBlacklist{}).Error
 }
 
-// Inicia um cron job para remover tokens expirados diariamente
 func (s *TokenBlacklistService) StartCronJob() {
 	c := cron.New()
 	c.AddFunc("@daily", func() {

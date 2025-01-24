@@ -24,41 +24,41 @@ func (h *CommentHandler) CreateComment(c *gin.Context) {
 		Content string `form:"content" binding:"required"`
 	}
 
-	// Verifica se o usuário está autenticado
+	// Check if the user is authenticated
 	userID, exists := c.Get("user_id")
 	if !exists {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "User not authenticated"})
 		return
 	}
 
-	// Converte o userID para UUID
+	// Convert userID to UUID
 	authorID, err := uuid.Parse(userID.(string))
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid user ID"})
 		return
 	}
 
-	// Obtém o post_id da URL
+	// Get post_id from the URL
 	postID, err := uuid.Parse(c.Param("post_id"))
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid post ID"})
 		return
 	}
 
-	// Verifica se a requisição contém um comentário válido
+	// Check if the request contains valid comment data
 	if err := c.ShouldBind(&request); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid input"})
 		return
 	}
 
-	// Chama a função de upload de imagem
+	// Call the image upload function
 	imageURL, err := utils.HandleImageUpload(c, "uploads/images/posts/comments")
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
 
-	// Chama o serviço para criar o comentário, agora com o PostID incluído
+	// Call the service to create the comment, now including PostID
 	comment, err := h.commentService.CreateComment(request.Content, imageURL, postID, authorID)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
@@ -68,7 +68,7 @@ func (h *CommentHandler) CreateComment(c *gin.Context) {
 	c.JSON(http.StatusCreated, comment)
 }
 
-// Nova função para listar todos os comentários de um post
+// New function to list all comments of a post
 func (h *CommentHandler) GetCommentsByPostID(c *gin.Context) {
 	postID, err := uuid.Parse(c.Param("post_id"))
 	if err != nil {

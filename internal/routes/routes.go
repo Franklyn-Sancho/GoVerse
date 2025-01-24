@@ -13,7 +13,6 @@ import (
 func SetupRouter(postHandler *handlers.PostHandler, friendshipHandler *handlers.FriendshipHandler, commentHandler *handlers.CommentHandler, likeHandler *handlers.LikeHandler) *gin.Engine {
 	r := gin.Default()
 
-	// Chama a função para configurar as rotas
 	SetupRoutes(r, postHandler, friendshipHandler, commentHandler, likeHandler)
 
 	return r
@@ -21,23 +20,23 @@ func SetupRouter(postHandler *handlers.PostHandler, friendshipHandler *handlers.
 
 // SetupRoutes agora também recebe um FriendshipHandler
 func SetupRoutes(router *gin.Engine, postHandler *handlers.PostHandler, friendshipHandler *handlers.FriendshipHandler, commentHandler *handlers.CommentHandler, likeHandler *handlers.LikeHandler) {
-	// Defina a chave secreta do JWT
+	// secret key
 	secretKey := os.Getenv("JWT_SECRET_KEY")
 	log.Printf("SetupRoutes Secret Key: %s", secretKey)
 
-	// Rotas públicas (não requerem autenticação)
+	// public routes (authentication not required)
 	router.POST("/login", handlers.Login)
 	router.POST("/register", handlers.RegisterUser)
 	router.GET("/confirm-email", handlers.ConfirmEmail)
 
-	// Rotas protegidas (requerem autenticação)
+	// protected routes (authentication required)
 	auth := router.Group("/")
 	auth.Use(middleware.AuthMiddleware(secretKey))
 
-	// Configuração das rotas de usuários, postagens e amizade
+	// user routes
 	SetupUserRoutes(auth)
-	SetupPostRoutes(auth, postHandler)             // Aqui passamos o postHandler
-	SetupFriendshipRoutes(auth, friendshipHandler) // Registre o FriendshipHandler
+	SetupPostRoutes(auth, postHandler)
+	SetupFriendshipRoutes(auth, friendshipHandler)
 	SetupCommentRoutes(auth, commentHandler)
 	SetupLikeRoutes(auth, likeHandler)
 }

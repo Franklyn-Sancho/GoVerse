@@ -68,7 +68,6 @@ func HandleImageUpload(c *gin.Context, uploadPath string) (string, error) {
 	timestamp := time.Now().Format("20060102-150405")
 	safeFilename := fmt.Sprintf("%s_%s%s", timestamp, uniqueID, ext)
 
-	// Create absolute path for storage
 	absPath, err := filepath.Abs(uploadPath)
 	if err != nil {
 		return "", errors.New("failed to get absolute path")
@@ -78,7 +77,6 @@ func HandleImageUpload(c *gin.Context, uploadPath string) (string, error) {
 		return "", errors.New("failed to create upload directory")
 	}
 
-	// Save file
 	filePath := filepath.Join(absPath, safeFilename)
 	if err := c.SaveUploadedFile(file, filePath); err != nil {
 		return "", errors.New("failed to upload image")
@@ -106,7 +104,6 @@ func HandleVideoUpload(c *gin.Context, uploadPath string) (string, error) {
 		return "", err
 	}
 
-	// Validate file size (100MB limit)
 	if file.Size > 100*1024*1024 {
 		return "", errors.New("video file too large (max 100MB)")
 	}
@@ -120,7 +117,6 @@ func HandleVideoUpload(c *gin.Context, uploadPath string) (string, error) {
 	timestamp := time.Now().Format("20060102-150405")
 	safeFilename := fmt.Sprintf("%s_%s%s", timestamp, uniqueID, ext)
 
-	// Create absolute path for storage
 	absPath, err := filepath.Abs(uploadPath)
 	if err != nil {
 		return "", errors.New("failed to get absolute path")
@@ -130,7 +126,6 @@ func HandleVideoUpload(c *gin.Context, uploadPath string) (string, error) {
 		return "", errors.New("failed to create upload directory")
 	}
 
-	// Save file
 	filePath := filepath.Join(absPath, safeFilename)
 	if err := c.SaveUploadedFile(file, filePath); err != nil {
 		return "", errors.New("failed to upload video")

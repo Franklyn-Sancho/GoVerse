@@ -34,7 +34,7 @@ func RegisterUser(c *gin.Context) {
 
 	if err := c.ShouldBind(&request); err != nil {
 		if err := c.ShouldBindJSON(&request); err != nil {
-			log.Printf("Erro de validação: %v", err)
+			log.Printf("Validation Error: %v", err)
 			c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid user input"})
 			return
 		}
@@ -42,7 +42,7 @@ func RegisterUser(c *gin.Context) {
 
 	imageURL, err := utils.HandleImageUpload(c, "uploads/imageProfile")
 	if err != nil {
-		log.Printf("Erro ao fazer upload da imagem: %v", err)
+		log.Printf("Upload image error: %v", err)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
@@ -56,7 +56,7 @@ func RegisterUser(c *gin.Context) {
 	}
 
 	if err := userService.RegisterUser(user); err != nil {
-		log.Printf("Erro ao registrar usuário: %v", err)
+		log.Printf("register user error: %v", err)
 		if err.Error() == "username already exists" {
 			c.JSON(http.StatusConflict, gin.H{"error": "Username already exists"})
 		} else {
@@ -65,7 +65,7 @@ func RegisterUser(c *gin.Context) {
 		return
 	}
 
-	log.Printf("Usuário '%s' registrado com sucesso", user.Username)
+	log.Printf("User '%s' registered successfully", user.Username)
 	c.JSON(http.StatusCreated, user)
 }
 
@@ -96,9 +96,7 @@ func Logout(c *gin.Context) {
 		return
 	}
 
-	if strings.HasPrefix(tokenString, "Bearer ") {
-		tokenString = strings.TrimPrefix(tokenString, "Bearer ")
-	}
+	tokenString = strings.TrimPrefix(tokenString, "Bearer ")
 
 	log.Printf("Received token: %s", tokenString)
 
@@ -135,7 +133,7 @@ func GetUserById(c *gin.Context) {
 	c.JSON(http.StatusOK, user)
 }
 
-// Handler para buscar usuário pelo username
+// Handler get user by username
 func GetUserByUsername(c *gin.Context) {
 	username := c.Param("username")
 
@@ -148,7 +146,7 @@ func GetUserByUsername(c *gin.Context) {
 	c.JSON(http.StatusOK, user)
 }
 
-// Handler para buscar usuário pelo email
+// Handler get user by email
 func GetUserByEmail(c *gin.Context) {
 	email := c.Param("email")
 
@@ -161,7 +159,7 @@ func GetUserByEmail(c *gin.Context) {
 	c.JSON(http.StatusOK, user)
 }
 
-// Handler para deletar usuário
+// Handler delete user
 func DeleteUser(c *gin.Context) {
 	id := c.Param("id")
 
@@ -177,7 +175,7 @@ func DeleteUser(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"message": "User deleted successfully"})
 }
 
-// Handler para suspender usuário
+// Handler suspend user account
 func SuspendUser(c *gin.Context) {
 	id := c.Param("id")
 
@@ -189,7 +187,7 @@ func SuspendUser(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"message": "User suspended successfully"})
 }
 
-// Handler para solicitar a exclusão da conta
+// Handler delete account user solicitation
 func RequestAccountDeletion(c *gin.Context) {
 	id := c.Param("id")
 
@@ -205,7 +203,7 @@ func RequestAccountDeletion(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"message": "Account deletion requested successfully"})
 }
 
-// Handler para excluir usuário permanentemente
+// Handler delete user account permanently
 func PermanentlyDeleteUser(c *gin.Context) {
 	id := c.Param("id")
 
@@ -221,24 +219,23 @@ func PermanentlyDeleteUser(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"message": "User will be deleted in 30 days"})
 }
 
-// ConfirmEmail manipula a confirmação de e-mail
 func ConfirmEmail(c *gin.Context) {
 	token := c.Query("token")
 
-	// Encontre o usuário pelo token
+	// get user by token
 	user, err := userService.FindByEmailConfirmToken(token)
 	if err != nil {
-		c.JSON(http.StatusNotFound, gin.H{"error": "Usuário não encontrado ou token inválido"})
+		c.JSON(http.StatusNotFound, gin.H{"error": "user not found or invalid token"})
 		return
 	}
 
-	// Atualize o status de verificação do e-mail
+	//
 	user.IsEmailVerified = true
-	user.EmailConfirmToken = "" // Limpa o token após a confirmação
+	user.EmailConfirmToken = ""
 	if err := userService.UpdateUser(user); err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Falha ao verificar e-mail"})
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "verify email error"})
 		return
 	}
 
-	c.JSON(http.StatusOK, gin.H{"message": "E-mail confirmado com sucesso"})
+	c.JSON(http.StatusOK, gin.H{"message": "email confirmed successfully"})
 }

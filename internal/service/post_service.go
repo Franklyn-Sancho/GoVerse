@@ -17,7 +17,6 @@ func NewPostService(repo *repository.PostRepository) *PostService {
 	return &PostService{repo: repo}
 }
 
-// PostService
 func (s *PostService) CreatePost(title, content, topic, imageURL, videoURL string, authorID uuid.UUID) (*models.Post, error) {
 	post := &models.Post{
 		Title:    title,
@@ -44,19 +43,16 @@ func (s *PostService) GetPostByID(id uuid.UUID) (*models.Post, error) {
 }
 
 func (s *PostService) UpdatePost(postID uuid.UUID, updatedData *models.Post) (*models.Post, error) {
-	// Busca o post existente
 	existingPost, err := s.GetPostByID(postID)
 	if err != nil {
 		return nil, err
 	}
 
-	// Atualiza os campos com as novas informações, mantendo o que não mudou
 	existingPost.Title = updatedData.Title
 	existingPost.Content = updatedData.Content
 	existingPost.Topic = updatedData.Topic
 	existingPost.UpdatedAt = time.Now()
 
-	// Salva a atualização
 	if err := s.repo.Update(existingPost); err != nil {
 		return nil, err
 	}
@@ -64,6 +60,5 @@ func (s *PostService) UpdatePost(postID uuid.UUID, updatedData *models.Post) (*m
 }
 
 func (s *PostService) DeletePost(id uuid.UUID) error {
-	// Pode fazer validações antes de deletar, se necessário
 	return s.repo.Delete(id)
 }
