@@ -7,6 +7,7 @@ import (
 	"GoVersi/internal/repository"
 	"GoVersi/internal/routes"
 	services "GoVersi/internal/service"
+	"os"
 
 	"log"
 
@@ -54,6 +55,12 @@ func main() {
 	// Inicializar o router
 	r := routes.SetupRouter(postHandler, friendshipHandler, commentHandler, likeHandler)
 
+	r.Static("/uploads", "./uploads")
+
+	// Criar diretório de uploads se não existir
+	os.MkdirAll("uploads/imageProfile", 0755)
+	os.MkdirAll("uploads/images", 0755)
+	os.MkdirAll("uploads/videos", 0755)
 	// Iniciar o servidor
 	startServer(r)
 }

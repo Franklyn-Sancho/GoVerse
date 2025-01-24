@@ -26,21 +26,18 @@ func (h *PostHandler) CreatePost(c *gin.Context) {
 		Topic   string `form:"topic" json:"topic" binding:"required"`
 	}
 
-	// Obtém o `user_id` do contexto (injetado pelo AuthMiddleware)
 	userID, exists := c.Get("user_id")
 	if !exists {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "User not authenticated"})
 		return
 	}
 
-	// Converte o `user_id` para UUID
 	authorID, err := uuid.Parse(userID.(string))
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid user ID"})
 		return
 	}
 
-	// Detecta automaticamente o tipo de requisição (JSON ou form-data)
 	contentType := c.ContentType()
 	if contentType == "application/json" {
 		if err := c.ShouldBindJSON(&request); err != nil {
@@ -57,24 +54,21 @@ func (h *PostHandler) CreatePost(c *gin.Context) {
 		return
 	}
 
-	// Upload de imagem (caso exista)
 	imageURL, err := utils.HandleImageUpload(c, "uploads/images")
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Error uploading image: " + err.Error()})
 		return
 	}
 
-	// Upload de vídeo (caso exista)
 	videoURL, err := utils.HandleVideoUpload(c, "uploads/videos")
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Error uploading video: " + err.Error()})
 		return
 	}
 
-	// Criação do post via serviço
 	post, err := h.postService.CreatePost(request.Title, request.Content, request.Topic, imageURL, videoURL, authorID)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Error creating post: " + err.Error()})
 		return
 	}
 

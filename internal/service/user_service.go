@@ -23,39 +23,33 @@ func NewUserService(repo repository.UserRepository) *UserService {
 }
 
 func (s *UserService) RegisterUser(user *models.User) error {
-	log.Printf("Tentando registrar usuário: %s", user.Username)
+	log.Printf("Iniciando registro do usuário: %s", user.Username)
 
-	// Verifica se o username já existe
 	exists, err := s.UserRepo.UsernameExists(user.Username)
 	if err != nil {
-		log.Printf("Erro ao verificar existência do username: %v", err)
+		log.Printf("Erro ao verificar username: %v", err)
 		return err
 	}
 	if exists {
-		log.Printf("O username '%s' já existe", user.Username)
 		return errors.New("username already exists")
 	}
 
-	// Hash da senha antes de salvar no banco
 	hashedPassword, err := utils.HashPassword(user.Password)
 	if err != nil {
-		log.Printf("Erro ao hash da senha: %v", err)
 		return err
 	}
 	user.Password = hashedPassword
 
-	// Cria o usuário no banco
 	if err := s.UserRepo.Create(user); err != nil {
-		log.Printf("Erro ao criar usuário no banco: %v", err)
+		log.Printf("Erro ao criar usuário: %v", err)
 		return err
 	}
 
 	if err := utils.SendConfirmationEmail(user.Email, user.Username, user.EmailConfirmToken); err != nil {
-		log.Printf("Erro ao enviar e-mail de confirmação: %v", err)
-		return err
+		log.Printf("Erro ao enviar email: %v", err)
 	}
 
-	log.Printf("Usuário '%s' registrado com sucesso", user.Username)
+	log.Printf("Usuário registrado com sucesso: %s", user.Username)
 	return nil
 }
 
@@ -63,18 +57,22 @@ func (s *UserService) RegisterUser(user *models.User) error {
 func (s *UserService) LoginUser(email, password string) (string, error) {
 	user, err := s.UserRepo.FindByEmail(email)
 	if err != nil {
-		return "", errors.New("invalid credentials")
+		return "", errors.New("something went wrong")
+	}
+
+	if user == nil {
+		return "", errors.New("invalid credentials") // Usuário não encontrado
 	}
 
 	if !utils.CheckPasswordHash(password, user.Password) {
-		return "", errors.New("invalid credentials")
+		return "", errors.New("invalid credentials") // Senha incorreta
 	}
 
 	// Obtenha a chave secreta das variáveis de ambiente
-	secretKey := os.Getenv("JWT_SECRET_KEY") // Certifique-se de que a chave secreta está sendo lida corretamente
+	secretKey := os.Getenv("JWT_SECRET_KEY")
 
 	// Converte o UUID para string antes de chamar GenerateJWT
-	return utils.GenerateJWT(user.ID.String(), secretKey) // Use a chave secreta aqui
+	return utils.GenerateJWT(user.ID.String(), secretKey)
 }
 
 // UpdateUser atualiza os dados do usuário no banco de dados

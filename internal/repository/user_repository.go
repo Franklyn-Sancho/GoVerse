@@ -52,15 +52,12 @@ func (r *UserRepositoryImpl) Create(user *models.User) error {
 
 // Implementação do método UsernameExists
 func (r *UserRepositoryImpl) UsernameExists(username string) (bool, error) {
-	var user models.User
-	err := r.DB.Where("username = ?", username).First(&user).Error
+	var count int64
+	err := r.DB.Model(&models.User{}).Where("username = ?", username).Count(&count).Error
 	if err != nil {
-		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return false, nil // Usuário não encontrado
-		}
-		return false, err // Outro erro
+		return false, err
 	}
-	return true, nil // Usuário encontrado
+	return count > 0, nil
 }
 
 func (r *UserRepositoryImpl) GetUsersWithPendingDeletion() ([]models.User, error) {
@@ -76,7 +73,10 @@ func (r *UserRepositoryImpl) GetUsersWithPendingDeletion() ([]models.User, error
 func (r *UserRepositoryImpl) FindByEmail(email string) (*models.User, error) {
 	var user models.User
 	if err := r.DB.Where("email = ?", email).First(&user).Error; err != nil {
-		return nil, err
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, nil // Retorna nil quando o usuário não é encontrado
+		}
+		return nil, err // Outros erros são retornados normalmente
 	}
 	return &user, nil
 }

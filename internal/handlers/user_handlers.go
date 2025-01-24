@@ -33,7 +33,6 @@ func RegisterUser(c *gin.Context) {
 	}
 
 	if err := c.ShouldBind(&request); err != nil {
-		// If form binding fails, try JSON
 		if err := c.ShouldBindJSON(&request); err != nil {
 			log.Printf("Erro de validação: %v", err)
 			c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid user input"})
@@ -41,7 +40,6 @@ func RegisterUser(c *gin.Context) {
 		}
 	}
 
-	// Handle image upload
 	imageURL, err := utils.HandleImageUpload(c, "uploads/imageProfile")
 	if err != nil {
 		log.Printf("Erro ao fazer upload da imagem: %v", err)
@@ -49,7 +47,6 @@ func RegisterUser(c *gin.Context) {
 		return
 	}
 
-	// Cria o usuário com os dados capturados
 	user := &models.User{
 		Username:     request.Username,
 		Email:        request.Email,
@@ -58,7 +55,6 @@ func RegisterUser(c *gin.Context) {
 		IsActive:     true,
 	}
 
-	// Chama o serviço para registrar o usuário
 	if err := userService.RegisterUser(user); err != nil {
 		log.Printf("Erro ao registrar usuário: %v", err)
 		if err.Error() == "username already exists" {
@@ -94,25 +90,21 @@ func Login(c *gin.Context) {
 }
 
 func Logout(c *gin.Context) {
-	// Pega o token do cabeçalho da requisição
 	tokenString := c.GetHeader("Authorization")
 	if tokenString == "" {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "No token provided"})
 		return
 	}
 
-	// Remove "Bearer " do tokenString se presente
 	if strings.HasPrefix(tokenString, "Bearer ") {
 		tokenString = strings.TrimPrefix(tokenString, "Bearer ")
 	}
 
-	log.Printf("Received token: %s", tokenString) // Log do token recebido
+	log.Printf("Received token: %s", tokenString)
 
-	// Carrega a chave secreta das variáveis de ambiente
 	secretKey := os.Getenv("JWT_SECRET_KEY")
 	log.Printf("Secret Key during logout: %s", secretKey)
 
-	// Tenta analisar e verificar as claims do token
 	claims, err := utils.ParseTokenClaims(tokenString, secretKey)
 	if err != nil {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": err.Error()})
@@ -122,7 +114,6 @@ func Logout(c *gin.Context) {
 	log.Printf("Token valid for user ID: %s", claims.UserID)
 	expirationTime := claims.ExpiresAt.Time
 
-	// Adiciona o token à blacklist com a data de expiração
 	err = tokenBlacklistService.AddToTokenBlacklist(tokenString, expirationTime)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to logout"})
@@ -132,7 +123,6 @@ func Logout(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"message": "Successfully logged out"})
 }
 
-// Handler para buscar usuário pelo ID
 func GetUserById(c *gin.Context) {
 	id := c.Param("id")
 
