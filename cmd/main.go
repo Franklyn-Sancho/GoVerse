@@ -3,10 +3,15 @@ package main
 import (
 	"GoVersi/internal/config"
 	"GoVersi/internal/handlers"
+	"GoVersi/internal/infrastrucuture/queue"
 	"GoVersi/internal/models"
 	"GoVersi/internal/repository"
 	"GoVersi/internal/routes"
 	services "GoVersi/internal/service"
+	"GoVersi/internal/service/email"
+	"encoding/json"
+
+	/* "encoding/json" */
 	"os"
 
 	"log"
@@ -17,15 +22,27 @@ import (
 )
 
 func main() {
-	// Carregar variáveis de ambiente
+	rabbitMQ, err := queue.NewRabbitMQ()
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer rabbitMQ.Close()
+
+	// Start processing RabbitMQ messages in a separate goroutine
+	go processRabbitMQMessages(rabbitMQ)
+
+	// Load environment variables
 	loadEnv()
 
-	// database connect
+	// Database connection
 	db := connectDatabase()
 
-	// start repositories and services
-	userRepository := repository.NewUserRepository(db)     // create a nre instance of repository
-	userService := services.NewUserService(userRepository) // import repository to service
+	// Initialize repositories and services
+	queueService := email.NewEmailQueueService(rabbitMQ)
+	mailService := email.NewEmailService(queueService)
+
+	userRepository := repository.NewUserRepository(db)
+	userService := services.NewUserService(userRepository, mailService)
 
 	postRepository := repository.NewPostRepository(db)
 	tokenBlacklistService := services.NewTokenBlacklistService(db)
@@ -40,16 +57,11 @@ func main() {
 
 	// Configure the handlers with the services
 	handlers.SetUserService(userService)
-	handlers.SetTokenBlacklistService(tokenBlacklistService) // Configure the Token Blacklist service
+	handlers.SetTokenBlacklistService(tokenBlacklistService)
 
-	// Create an instance of PostHandler
 	postHandler := handlers.NewPostHandler(postService)
-
-	// Initialize the FriendshipHandler
 	friendshipHandler := handlers.NewFriendshipHandler(friendshipService)
-
 	commentHandler := handlers.NewCommentHandler(commentService)
-
 	likeHandler := handlers.NewLikeHandler(likeService)
 
 	// Initialize the router
@@ -64,7 +76,31 @@ func main() {
 
 	// Start the server
 	startServer(r)
+}
 
+// Function to process RabbitMQ messages
+func processRabbitMQMessages(rabbitMQ *queue.RabbitMQ) {
+	msgs, err := rabbitMQ.Consume("email_queue")
+	if err != nil {
+		log.Printf("Error consuming RabbitMQ messages: %v", err)
+		return
+	}
+
+	emailService := email.NewEmailService(email.NewEmailQueueService(rabbitMQ))
+
+	for d := range msgs {
+		var msg email.EmailMessage
+		if err := json.Unmarshal(d.Body, &msg); err != nil {
+			log.Printf("Error parsing message: %v", err)
+			continue
+		}
+
+		if err := emailService.SendEmail(msg.To, msg.Subject, msg.Body); err != nil {
+			log.Printf("Error sending email: %v", err)
+		} else {
+			log.Printf("Email sent to %s successfully", msg.To)
+		}
+	}
 }
 
 // loadEnv load .env
@@ -114,8 +150,8 @@ func connectDatabase() *gorm.DB {
 	return db
 }
 
-// start server on :8080 port
 func startServer(r *gin.Engine) {
+	log.Println("Starting server on port :8080")
 	if err := r.Run(":8080"); err != nil {
 		log.Fatalf("Failed to start server: %v", err)
 	}

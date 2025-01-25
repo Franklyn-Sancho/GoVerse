@@ -3,6 +3,7 @@ package services
 import (
 	"GoVersi/internal/models"
 	"GoVersi/internal/repository"
+	"GoVersi/internal/service/email"
 	"GoVersi/internal/utils"
 	"errors"
 	"log"
@@ -12,12 +13,14 @@ import (
 )
 
 type UserService struct {
-	UserRepo repository.UserRepository
+	UserRepo     repository.UserRepository
+	EmailService email.EmailService
 }
 
-func NewUserService(repo repository.UserRepository) *UserService {
+func NewUserService(repo repository.UserRepository, emailService email.EmailService) *UserService {
 	return &UserService{
-		UserRepo: repo,
+		UserRepo:     repo,
+		EmailService: emailService,
 	}
 }
 
@@ -44,7 +47,7 @@ func (s *UserService) RegisterUser(user *models.User) error {
 		return err
 	}
 
-	if err := utils.SendConfirmationEmail(user.Email, user.Username, user.EmailConfirmToken); err != nil {
+	if err := s.EmailService.SendConfirmationEmail(user.Email, user.Username, user.EmailConfirmToken); err != nil {
 		log.Printf("Erro ao enviar email: %v", err)
 	}
 

@@ -28,6 +28,7 @@ GoVerse is a robust social networking platform built with Go, offering a rich se
 - **Storage:** Local file system
 - **Email:** MailHog for development
 - **Containerization:** Docker and Docker Compose
+- **Messaging Queue:** RabbitMQ for asynchronous task processing and message handling
 
 ## Getting Started
 
@@ -35,6 +36,7 @@ GoVerse is a robust social networking platform built with Go, offering a rich se
 
 - Docker
 - Docker Compose
+- Rabbitqm
 
 ### Installation
 

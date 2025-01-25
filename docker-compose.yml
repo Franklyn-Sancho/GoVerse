@@ -1,4 +1,19 @@
 services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "8080:8080"
+    environment:
+      - JWT_SECRET_KEY=${JWT_SECRET_KEY}
+      - DATABASE_URL=${DATABASE_URL}
+    depends_on:
+      db:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+
   db:
     image: postgres:latest
     restart: always
@@ -16,18 +31,21 @@ services:
       retries: 5
       timeout: 5s
 
-  app:
-    build:
-      context: .
-      dockerfile: Dockerfile
+  rabbitmq: 
+    image: rabbitmq:3-management
     ports:
-      - "8080:8080"
+      - "5672:5672"
+      - "15672:15672"
     environment:
-      - JWT_SECRET_KEY=${JWT_SECRET_KEY}
-      - DATABASE_URL=${DATABASE_URL}
-    depends_on:
-      db:
-        condition: service_healthy
+      RABBITMQ_DEFAULT_USER: ${RABBITMQ_DEFAULT_USER}
+      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_DEFAULT_PASS}
+    healthcheck:
+      test: ["CMD", "rabbitmqctl", "status"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  
 
 
   mailhog:
